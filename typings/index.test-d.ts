@@ -770,9 +770,10 @@ declare const guildMember: GuildMember;
 
 // Test whether the structures implement send
 expectType<TextBasedChannelFields['send']>(dmChannel.send);
-expectType<ThreadChannel>(threadChannel);
-expectType<NewsChannel>(newsChannel);
-expectType<TextChannel>(textChannel);
+expectType<TextBasedChannelFields['send']>(threadChannel.send);
+expectType<TextBasedChannelFields['send']>(newsChannel.send);
+expectType<TextBasedChannelFields['send']>(textChannel.send);
+expectType<TextBasedChannelFields['send']>(voiceChannel.send);
 expectAssignable<PartialTextBasedChannelFields>(user);
 expectAssignable<PartialTextBasedChannelFields>(guildMember);
 
@@ -780,6 +781,7 @@ expectType<Message | null>(dmChannel.lastMessage);
 expectType<Message | null>(threadChannel.lastMessage);
 expectType<Message | null>(newsChannel.lastMessage);
 expectType<Message | null>(textChannel.lastMessage);
+expectType<Message | null>(voiceChannel.lastMessage);
 
 expectDeprecated(storeChannel.clone());
 expectDeprecated(categoryChannel.createChannel('Store', { type: 'GUILD_STORE' }));
@@ -1292,15 +1294,124 @@ declare const GuildBasedChannel: GuildBasedChannel;
 declare const NonThreadGuildBasedChannel: NonThreadGuildBasedChannel;
 declare const GuildTextBasedChannel: GuildTextBasedChannel;
 
-expectType<DMChannel | PartialDMChannel | NewsChannel | TextChannel | ThreadChannel>(TextBasedChannel);
-expectType<'DM' | 'GUILD_NEWS' | 'GUILD_TEXT' | 'GUILD_PUBLIC_THREAD' | 'GUILD_PRIVATE_THREAD' | 'GUILD_NEWS_THREAD'>(
+expectType<DMChannel | PartialDMChannel | NewsChannel | TextChannel | ThreadChannel | VoiceChannel>(TextBasedChannel);
+expectType<ChannelType.GuildText | ChannelType.DM | ChannelType.GuildNews | ChannelType.GuildVoice | ThreadChannelType>(
   TextBasedChannelTypes,
 );
 expectType<StageChannel | VoiceChannel>(VoiceBasedChannel);
 expectType<CategoryChannel | NewsChannel | StageChannel | StoreChannel | TextChannel | ThreadChannel | VoiceChannel>(
   GuildBasedChannel,
 );
-expectType<CategoryChannel | NewsChannel | StageChannel | StoreChannel | TextChannel | VoiceChannel>(
-  NonThreadGuildBasedChannel,
-);
-expectType<NewsChannel | TextChannel | ThreadChannel>(GuildTextBasedChannel);
+expectType<CategoryChannel | NewsChannel | StageChannel | TextChannel | VoiceChannel>(NonThreadGuildBasedChannel);
+expectType<NewsChannel | TextChannel | ThreadChannel | VoiceChannel>(GuildTextBasedChannel);
+
+const button = new ButtonBuilder({
+  label: 'test',
+  style: ButtonStyle.Primary,
+  customId: 'test',
+});
+
+const selectMenu = new SelectMenuBuilder({
+  maxValues: 10,
+  minValues: 2,
+  customId: 'test',
+});
+
+new ActionRowBuilder({
+  components: [selectMenu.toJSON(), button.toJSON()],
+});
+
+new SelectMenuBuilder({
+  customId: 'foo',
+});
+
+new ButtonBuilder({
+  style: ButtonStyle.Danger,
+})
+  .setEmoji('<a:foo:123>')
+  .setEmoji('<:foo:123>')
+  .setEmoji('foobar:123')
+  .setEmoji('😏')
+  .setEmoji({
+    name: 'test',
+    id: '123',
+    animated: false,
+  });
+
+// @ts-expect-error
+new EmbedBuilder().setColor('abc');
+
+new EmbedBuilder().setColor('#ffffff');
+
+expectNotAssignable<ActionRowData<MessageActionRowComponentData>>({
+  type: ComponentType.ActionRow,
+  components: [
+    {
+      type: ComponentType.Button,
+    },
+  ],
+});
+
+declare const chatInputInteraction: ChatInputCommandInteraction;
+
+expectType<Attachment>(chatInputInteraction.options.getAttachment('attachment', true));
+expectType<Attachment | null>(chatInputInteraction.options.getAttachment('attachment'));
+
+declare const modal: ModalBuilder;
+
+chatInputInteraction.showModal(modal);
+
+chatInputInteraction.showModal({
+  title: 'abc',
+  custom_id: 'abc',
+  components: [
+    {
+      components: [
+        {
+          custom_id: 'aa',
+          label: 'label',
+          style: TextInputStyle.Short,
+          type: ComponentType.TextInput,
+        },
+      ],
+      type: ComponentType.ActionRow,
+    },
+  ],
+});
+
+declare const selectMenuData: APISelectMenuComponent;
+SelectMenuBuilder.from(selectMenuData);
+
+declare const selectMenuComp: SelectMenuComponent;
+SelectMenuBuilder.from(selectMenuComp);
+
+declare const buttonData: APIButtonComponent;
+ButtonBuilder.from(buttonData);
+
+declare const buttonComp: ButtonComponent;
+ButtonBuilder.from(buttonComp);
+
+declare const textInputData: APITextInputComponent;
+TextInputBuilder.from(textInputData);
+
+declare const textInputComp: TextInputComponent;
+TextInputBuilder.from(textInputComp);
+
+declare const embedData: APIEmbed;
+EmbedBuilder.from(embedData);
+
+declare const embedComp: Embed;
+EmbedBuilder.from(embedComp);
+
+declare const stageChannel: StageChannel;
+declare const partialGroupDMChannel: PartialGroupDMChannel;
+
+expectType<ChannelMention>(textChannel.toString());
+expectType<ChannelMention>(voiceChannel.toString());
+expectType<ChannelMention>(newsChannel.toString());
+expectType<ChannelMention>(threadChannel.toString());
+expectType<ChannelMention>(stageChannel.toString());
+expectType<ChannelMention>(partialGroupDMChannel.toString());
+expectType<UserMention>(dmChannel.toString());
+expectType<UserMention>(user.toString());
+expectType<UserMention>(guildMember.toString());
