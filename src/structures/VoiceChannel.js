@@ -3,6 +3,7 @@
 const process = require('node:process');
 const BaseGuildVoiceChannel = require('./BaseGuildVoiceChannel');
 const TextBasedChannel = require('./interfaces/TextBasedChannel');
+const { VideoQualityModes } = require('../util/Constants');
 const MessageManager = require('../managers/MessageManager');
 
 /**
